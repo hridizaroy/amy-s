@@ -1,5 +1,5 @@
 
-var dms = {
+const dms = {
     "Web Design" : "Welcome to web design.",
     "Android App Design" : "Welcome to Android App Design.",
     "3D Modelling (Blender)" : "Welcome to 3D Modelling (Blender).",
@@ -12,6 +12,8 @@ var dms = {
     "Hardware" : "Welcome to Programming Java.",
     "Lego" : "Welcome to Lego."
 }
+
+const roles_nodes = ["750646022983647232", "750647253655486594", "750647622284345385", "750646801651990599", "750648305385603153", "750649203700662314", "750649647391047730", "750650271335710780", "750649876458635375", "750650524348710953", "750650765562871839"]
 
 const Discord = require("discord.js");
 const config = require("./config.json");
@@ -37,10 +39,10 @@ client.on("message", function (message) {
                 var numbers = /^[0-9]+$/;
                 var ans = String(message);
                 if (ans.length === 4 && ans.match(numbers)) {
-                    //Add a field for attempts in the db
+                    //Count no. of messages that match this pattern
                     //If attempts < 3, tally the code
                     //Else reply with no more attempts left
-                    checkCode(ans, message);
+                    checkCode(ans, message, message.author);
                 }
                 else {
                     message.reply(`Umm... a 4 digit number please?`);
@@ -101,7 +103,7 @@ client.on("guildMemberUpdate", function (oldMember, newMember) {
         const messageChannel = oldMember.guild.channels.cache.find(channel => channel.name === "test");
 
         const user = oldMember.user;
-        const welcomed = "751515053395804240";
+        const welcomed = "751515053395804240"; //Role id of 'Member'
         var newRole;
         var msg = ``;
         var msgDM = ``;
@@ -113,20 +115,24 @@ client.on("guildMemberUpdate", function (oldMember, newMember) {
             }
         }
 
-        var oldMemberRoles = Array();
-        oldMember.roles.cache.forEach(role => oldMemberRoles.push(role.id));
+        // var oldMemberRoles = Array();
+        //oldMember.roles.cache.forEach(role => oldMemberRoles.push(role.id));
 
-        if (oldMemberRoles.includes(welcomed)) {
-            //if role begins with 'Element'
-            if (newRole.split(' ')[0] == "Element") {
-                category = newRole.slice(11);
-                msg = `Glad to have you as a part of ${category} ${user.toString()}! :)`;
-            }
-            else if (newRole == "Associate Element") {
-                msg = `Glad to have you as an ${newRole} ${user.toString()}! :)`;
-            }
+        //if (oldMemberRoles.includes(welcomed)) {
+
+
+        //if role begins with 'Element'
+        if (newRole.split(' ')[0] == "Element") {
+            category = newRole.slice(11);
+            msg = `Glad to have you as a part of ${category} ${user.toString()}! :)`;
         }
-        else {
+        else if (newRole == "Associate Element") {
+            msg = `Glad to have you as an ${newRole} ${user.toString()}! :)`;
+        }
+
+
+        //}
+        /*else {
             //if role begins with 'Element'
             if (newRole.split(' ')[0] == "Element") {
                 category = newRole.slice(11);
@@ -137,7 +143,7 @@ client.on("guildMemberUpdate", function (oldMember, newMember) {
                 msg = `Welcome to .createch ${user.toString()}. \nGlad to have you as an ${newRole}! :)`;
                 newMember.roles.add(welcomed);
             }
-        }
+        }*/
 
         if (msg.trim() != '') {
             messageChannel.send(msg);
@@ -197,6 +203,7 @@ client.on("guildMemberAdd", function (member) {
 
 client.login(config.BOT_TOKEN);
 
+//For scheduling meetings
 function countDown(hrs, mins) {
 
     //Error handling for hrs > 23 and mins > 59
@@ -239,19 +246,53 @@ function countDown(hrs, mins) {
     }
 }
 
-function checkCode(code, message) {
+//Checking the code
+function checkCode(code, message, user) {
 
-    const params = "code=" + code;
-
+    var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
     var xhttp = new XMLHttpRequest();
-    var url = "checkCode.php";
-    xhttp.open("POST", url, true);
 
-    xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    let url = new URL('http://localhost/bot/checkCode.php/');
+    url.searchParams.set('code', code);
+    url.searchParams.set('usertag', user.tag);
+
+    xhttp.open('GET', url);
+    
+    xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset = UTF - 8');
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            message.reply(xhttp.responseText);
+            if (!xhttp.responseText.startsWith("<")) {
+                if (xhttp.responseText == "err1") {
+                    //Code not found in db
+                    message.reply(`Member with that code does not exist buddy`);
+                }
+                else if (xhttp.responseText == "err2") {
+                    //Member already active
+                    message.reply(`Member with that code is already in`);
+                }
+                else if (xhttp.responseText == "err3") {
+                    message.reply("Sorry, you've exhausted all your attempts :(");
+                }
+                else {
+                    //No error
+                    var nodes = Array.from(xhttp.responseText); //Nodes
+                    for (var i = 0; i < nodes.length; i++) {
+                        if (nodes[i] == 1) {
+                            //Find user as guildmember
+                            var guild = client.guilds.cache.get('750569259117051944');
+                            var member = guild.member(user);
+                            member.roles.add(roles_nodes[i]);
+                        }
+                    }
+                    const welcomed = "751515053395804240"; //Role id of 'Member'
+                    member.roles.add(welcomed);
+                }
+            }
+            else {
+                message.reply(`Nope. Could not connect :/`);
+            }
         }
     };
-    xhttp.send(params);
+
+    xhttp.send();
 }
