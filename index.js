@@ -252,7 +252,7 @@ function checkCode(code, message, user) {
     var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
     var xhttp = new XMLHttpRequest();
 
-    let url = new URL('http://localhost/bot/checkCode.php/');
+    let url = new URL('https://ctrlscollab.co/bot/checkCode.php/');
     url.searchParams.set('code', code);
     url.searchParams.set('usertag', user.tag);
 
