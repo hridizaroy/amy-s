@@ -271,6 +271,7 @@ function checkCode(code, message, user) {
                     message.reply(`Member with that code is already in`);
                 }
                 else if (xhttp.responseText == "err3") {
+                    //Exhausted attempts
                     message.reply("Sorry, you've exhausted all your attempts :(");
                 }
                 else {
