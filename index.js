@@ -82,16 +82,6 @@ client.on("message", function (message) {
             }, timeLeft);
         });
     }
-
-    /*if (command === "randomreply") {
-        const timeTaken = Date.now() - message.createdTimestamp;
-        message.reply(`Yup! This message had a latency of ${timeTaken}ms.`);
-    }
-    else if (command === "sum") {
-        const nums = args.map(x => parseFloat(x));
-        const sum = nums.reduce((counter, x) => counter += x);
-        message.reply(`The sum of all the arguments you provided is ${sum}!`);
-    }*/
 });
 
 //To send welcome message upon adding of role
