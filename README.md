@@ -1,4 +1,4 @@
-# amy-s
+# Amy S
 
 This is a discord bot written in Node.js
 
